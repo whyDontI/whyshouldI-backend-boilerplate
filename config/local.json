@@ -1,0 +1,16 @@
+{
+  "server": {
+    "baseUrl": "http://127.0.0.1",
+    "port": 5000
+  },
+  "database": {
+    "remoteDB": {},
+    "localDB": {
+      "db_host": "127.0.0.1",
+      "db_user": "root",
+      "db_password": "",
+      "db_name": "testBackendApp",
+      "db_port": 27017
+    }
+  }
+}
