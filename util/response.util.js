@@ -4,7 +4,6 @@ class SendResponse {
   errorMsg (req, res, status, message, error, scope) {
     logger.logResponse(req.id, { status: status, message: message }, 200)
     res.status(status).json({ message: message })
-    // _StoreErrorlogs(req, error.stack, scope);
   };
 
   successMsg (req, res, status, data, message) {
