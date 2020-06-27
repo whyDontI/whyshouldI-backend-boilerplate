@@ -4,7 +4,7 @@ const userQuery = require('../dataAdapter/mongo/query/user.query')
 const md5 = require('md5')
 
 class UserDetails {
-  /*
+  /**
     *_userLogin() User login
     *@param {object} req
     *@param {object} res
@@ -31,7 +31,7 @@ class UserDetails {
     };
   };
 
-  /*
+  /**
     *_createUser() Create new User
     *@param {object} req
     *@param {object} res
@@ -41,7 +41,11 @@ class UserDetails {
     try {
       const UserCount = await userQuery.__getUserCount(req.body)
       if (UserCount > 0) return __.customMsg(req, res, 404, 'User with given credentials already exist')
-      req.body.password = md5(req.body.password)
+
+      if (req.body.password) {
+        req.body.password = md5(req.body.password)
+      }
+
       const createdUser = await userQuery.__insertUserDetails(req.body)
       if (createdUser) {
         delete createdUser.password
@@ -53,7 +57,7 @@ class UserDetails {
     }
   };
 
-  /*
+  /**
     *_updateUser() Update User
     *@param {object} req
     *@param {object} res
@@ -73,7 +77,7 @@ class UserDetails {
     }
   }
 
-  /*
+  /**
     *_deleteUser() Delete User
     *@param {object} req
     *@param {object} res
@@ -89,7 +93,7 @@ class UserDetails {
     }
   }
 
-  /*
+  /**
     *_getOneUser() Get One User
     *@param {object} req
     *@param {object} res
@@ -107,20 +111,13 @@ class UserDetails {
     }
   }
 
-  /*
+  /**
     *_getUser() Get Users
-    *@param {object} req
-    *@param {object} res
-    *@return {undefined}
+    *@param {Object} req.query - Express req.query
+    *@return {Promise}
     * */
-  async _getUsers (req, res) {
-    try {
-      const Users = await userQuery.__getUsers(req.query)
-      if (!Users.length) { return __.customMsg(req, res, 404, 'Users not found') }
-      return __.successMsg(req, res, 200, Users, 'Users Returned Successfully!')
-    } catch (error) {
-      __.errorMsg(req, res, 503, 'Service Unavaiable', error)
-    }
+  async _getUsers (query) {
+    return userQuery.__getUsers(query)
   }
 };
 

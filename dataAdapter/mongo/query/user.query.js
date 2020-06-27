@@ -1,7 +1,7 @@
 const user = require('../models/user.model')
 
 class User {
-  /*
+  /**
     *__getUserById() Get user by Id
     *@param {string} id - user _id
     *@return {Promise}
@@ -13,7 +13,7 @@ class User {
       .lean()
   }
 
-  /*
+  /**
     *__getUserByEmail() Get user by Email
     *@param {string} email - user email
     *@return {Promise}
@@ -25,7 +25,7 @@ class User {
       .lean()
   }
 
-  /*
+  /**
     *__getUserByNumber() Get user by Number
     *@param {string} number - user Number
     *@return {Promise}
@@ -37,7 +37,7 @@ class User {
       .lean()
   }
 
-  /*
+  /**
     *__getUserCount() Get user Count
     *@param {object} body - Express request body
     *@param {object} body.phoneNumber - user phoneNumber
@@ -50,31 +50,39 @@ class User {
       .countDocuments()
   }
 
-  /*
+  /**
     *__getUsers() Get users
-    *@param {object} query - Express request query
-    *@return {Promise}
+    *@param {Object} req.query - Express req.query
+    *@param {string} query.search - Search string
+    *@param {number} query.sort - [sort = -1] One for ascending / negative one for descending
+    *@param {number} query.size - [size = 100] Documents per page
+    *@param {number} query.page - [page = 0] Page number
+    *@return {Promise<mongoose.Query>}
     * */
-  async __getUsers (query) {
-    const obj = (query.search) ? {
+  async __getUsers ({
+    search,
+    sort = -1,
+    size = 100,
+    page = 0
+  }) {
+    const obj = (search) ? {
       name: {
-        $regex: '.*' + query.search + '.*',
+        $regex: '.*' + search + '.*',
         $options: 'i'
       }
     } : {}
 
     return user.find(obj)
       .sort({
-        name: (query.name || 1),
-        _id: (query.sort || -1)
+        _id: (sort)
       })
       .select('-password -__v')
-      .limit((parseInt(query.size) || 100))
-      .skip((parseInt(query.size) || 100) * (parseInt(query.page) || 0))
+      .limit(parseInt(size))
+      .skip(parseInt(size) * parseInt(page))
       .lean()
   }
 
-  /*
+  /**
     *__insertUserDetails() Create New user with provided details
     *@param {object} body - Express request body
     *@return {Promise}
@@ -83,7 +91,7 @@ class User {
     return user.create(body)
   }
 
-  /*
+  /**
     *__updateUserDetails() Update user
     *@param {string} id - user _id
     *@param {object} body - Express request body
@@ -97,11 +105,6 @@ class User {
     })
   }
 
-  /*
-    *__deleteUser() Delete user
-    *@param {string} id - user _id
-    *@return {Promise}
-    * */
   async __deleteUser (id) {
     return user.remove({
       _id: id
