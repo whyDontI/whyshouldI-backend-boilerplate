@@ -8,7 +8,7 @@ class UserValidator {
       name: joi.string().required(),
       email: joi.string().email().required(),
       phoneNumber: joi.string().regex(phoneNumberRegEx).required(),
-      password: joi.string().required()
+      password: joi.string().optional()
     })
 
     try {
@@ -50,7 +50,7 @@ class UserValidator {
 
   async userLogin (req, res, next) {
     const schema = joi.object().keys({
-      phoneNumber: joi.string().regex(phoneNumberRegEx).optional(),
+      phoneNumber: joi.string().regex(phoneNumberRegEx).required(),
       password: joi.string().required()
     })
     try {

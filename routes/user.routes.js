@@ -8,7 +8,6 @@ const __ = require('../util/response.util')
 
 app.post('/login', userValidator.userLogin, userService._userLogin) // LogIn
 
-// app.get('/', auth.authentication, userService._getUsers) // Get users
 app.get('/', auth.authentication, async (req, res) => {
   try {
     const userData = await userService._getUsers(req.query)
