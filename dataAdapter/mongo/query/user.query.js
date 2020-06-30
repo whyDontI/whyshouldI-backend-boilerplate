@@ -3,8 +3,8 @@ const user = require('../models/user.model')
 class User {
   /**
     *__getUserById() Get user by Id
-    *@param {string} id - user _id
-    *@return {Promise}
+    *@param {string} id - User _id
+    *@return {Promise<mongoose.Query>}
     * */
   async __getUserById (id) {
     return user.findOne({
@@ -39,13 +39,12 @@ class User {
 
   /**
     *__getUserCount() Get user Count
-    *@param {object} body - Express request body
-    *@param {object} body.phoneNumber - user phoneNumber
-    *@return {Promise}
+    *@param {string} phoneNumber - User phoneNumber
+    *@return {Promise<mongoose.Query>}
     * */
-  async __getUserCount (body) {
+  async __getUserCount (phoneNumber) {
     return user.find({
-      phoneNumber: body.phoneNumber
+      phoneNumber: phoneNumber
     })
       .countDocuments()
   }
@@ -84,24 +83,28 @@ class User {
 
   /**
     *__insertUserDetails() Create New user with provided details
-    *@param {object} body - Express request body
-    *@return {Promise}
+    *@param {object} userdata - User Data object
+    *@param {string} userdata.name - User name
+    *@param {string} userdata.email - User email
+    *@param {string} userdata.phoneNumber - User phoneNumber
+    *@param {string} userdata.password - User password
+    *@return {Promise<mongoose.Query>}
     * */
-  async __insertUserDetails (body) {
-    return user.create(body)
+  async __insertUserDetails (userData) {
+    return user.create(userData)
   }
 
   /**
     *__updateUserDetails() Update user
-    *@param {string} id - user _id
-    *@param {object} body - Express request body
-    *@return {Promise}
+    *@param {string} id - User _id
+    *@param {object} data - Data to be updated
+    *@return {Promise<mongoose.Query>}
     * */
-  async __updateUserDetails (id, body) {
+  async __updateUserDetails (id, data) {
     return user.updateOne({
       _id: id
     }, {
-      $set: body
+      $set: data
     })
   }
 
