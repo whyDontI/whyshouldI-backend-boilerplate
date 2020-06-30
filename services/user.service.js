@@ -80,8 +80,6 @@ class UserDetails {
     *@return {Promise<Object>}
     * */
   async _updateUser (id, data) {
-    // params.id
-    // req.body - data
     try {
       if (data.password !== undefined) {
         data.password = md5(data.password)

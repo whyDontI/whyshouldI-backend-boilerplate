@@ -108,6 +108,11 @@ class User {
     })
   }
 
+  /**
+    *__deleteUser() Delete user
+    *@param {string} id - User _id
+    *@return {Promise<mongoose.Query>}
+    * */
   async __deleteUser (id) {
     return user.remove({
       _id: id
