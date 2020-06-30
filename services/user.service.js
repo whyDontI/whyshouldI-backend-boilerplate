@@ -1,79 +1,97 @@
 const jwt = require('../middlewares/auth/auth')
-const __ = require('../util/response.util')
 const userQuery = require('../dataAdapter/mongo/query/user.query')
 const md5 = require('md5')
 
 class UserDetails {
   /**
     *_userLogin() User login
-    *@param {object} req
-    *@param {object} res
-    *@return {undefined}
+    *@param {object} body - Express req.body
+    *@param {string} body.phoneNumber - phonwNumber
+    *@param {string} body.password - password
+    *@return {Promise<Object>}
     * */
-  async _userLogin (req, res) {
+  async _userLogin ({
+    phoneNumber,
+    password
+  }) {
     try {
-      const UserDetails = await userQuery.__getUserByNumber(req.body.phoneNumber)
-      if (!UserDetails) return __.customMsg(req, res, 404, 'Incorrect Number or User does not exists')
-      if (!UserDetails.password || UserDetails.password !== md5(req.body.password)) return __.customMsg(req, res, 404, 'Incorrect password')
-      if (UserDetails.password === md5(req.body.password)) {
-        await userQuery.__updateUserDetails(UserDetails._id, { lastLoggedIn: Date.now() })
-        const token = await jwt.createToken(UserDetails._id)
+      const userData = await userQuery.__getUserByNumber(phoneNumber)
+      if (!userData) return Promise.resolve({ message: 'Incorrect Number or User does not exists', status: 400, userData: {} })
+      if (!userData.password || userData.password !== md5(password)) return Promise.resolve({ message: 'Incorrect password', status: 401, userData: {} })
+      if (userData.password === md5(password)) {
+        await userQuery.__updateUserDetails(userData._id, { lastLoggedIn: Date.now() })
+        const token = await jwt.createToken(userData._id)
 
-        UserDetails.token = token
+        userData.token = token
 
         // Remove unwanted keys
-        delete UserDetails.password
-        delete UserDetails.__v
-        return __.successMsg(req, res, 200, UserDetails, 'User logged in successfully')
+        delete userData.password
+        delete userData.__v
+        return Promise.resolve({ userData, message: 'User logged in successfully', status: 200 })
       };
     } catch (error) {
-      __.errorMsg(req, res, 503, 'Service Unavailable.', error)
+      return Promise.reject(error)
     };
   };
 
   /**
-    *_createUser() Create new User
-    *@param {object} req
-    *@param {object} res
-    *@return {undefined}
-    * */
-  async _createUser (req, res) {
+   *_createUser() Create new User
+   *@param {object} body - Express body object
+   *@param {string} body.name - name
+   *@param {string} body.email - email
+   *@param {string} body.phoneNumber - phoneNumber
+   *@param {string} body.password - password
+   *@return {Promise}
+   * */
+  async _createUser ({
+    name,
+    email,
+    phoneNumber,
+    password
+  }) {
     try {
-      const UserCount = await userQuery.__getUserCount(req.body)
-      if (UserCount > 0) return __.customMsg(req, res, 404, 'User with given credentials already exist')
-
-      if (req.body.password) {
-        req.body.password = md5(req.body.password)
+      const UserCount = await userQuery.__getUserCount(phoneNumber)
+      if (UserCount) {
+        return Promise.resolve({ createdUser: {}, message: 'User already exists', status: 400 })
+      }
+      if (password) {
+        password = md5(password)
       }
 
-      const createdUser = await userQuery.__insertUserDetails(req.body)
-      if (createdUser) {
-        delete createdUser.password
-        delete createdUser.__v
-        return __.successMsg(req, res, 201, createdUser, 'User Added Successfully!')
-      }
+      const createdUser = await userQuery.__insertUserDetails({
+        name,
+        email,
+        phoneNumber,
+        password
+      })
+
+      delete createdUser.password
+      delete createdUser.__v
+      return Promise.resolve({ createdUser, message: 'User created successfully', status: 200 })
     } catch (error) {
-      __.errorMsg(req, res, 503, 'Service Unavaiable', error)
+      return Promise.reject(error)
     }
   };
 
   /**
     *_updateUser() Update User
-    *@param {object} req
-    *@param {object} res
-    *@return {undefined}
+    *@param {string} id - User _id
+    *@param {object} data - User data to be updated
+    *@return {Promise<Object>}
     * */
-  async _updateUser (req, res) {
+  async _updateUser (id, data) {
+    // params.id
+    // req.body - data
     try {
-      if (req.body.password !== undefined) {
-        req.body.password = md5(req.body.password)
+      if (data.password !== undefined) {
+        data.password = md5(data.password)
       }
-      const updatedUser = await userQuery.__updateUserDetails(req.params.id, req.body)
-      if (!updatedUser.nModified) { return __.customMsg(req, res, 404, 'User not found') }
-      delete req.body.password
-      return __.successMsg(req, res, 200, req.body, 'User updated Successfully!')
+      const updatedUser = await userQuery.__updateUserDetails(id, data)
+      if (!updatedUser.nModified) { return Promise.resolve({ message: 'User not found', updatedUser, status: 400 }) }
+      delete data.password
+      return Promise.resolve({ message: 'User updated Successfully!', updatedUser, status: 200 })
     } catch (error) {
-      __.errorMsg(req, res, 503, 'Service Unavaiable', error)
+      return Promise.reject(error)
     }
   }
 
@@ -83,41 +101,46 @@ class UserDetails {
     *@param {object} res
     *@return {undefined}
     * */
-  async _deleteUser (req, res) {
+  async _deleteUser (id) {
     try {
-      const updatedUser = await userQuery.__deleteUser(req.body.id)
-      if (!updatedUser.nModified) return __.customMsg(req, res, 404, 'User not found')
-      return __.successMsg(req, res, 202, updatedUser, 'Deleted User Successfully!')
+      const deletedUser = await userQuery.__deleteUser(id)
+      if (!deletedUser.deletedCount) return Promise.resolve({ deletedUser, message: 'User not found', status: 400 })
+      return Promise.resolve({ deletedUser, message: 'Deleted User Successfully!', status: 200 })
     } catch (error) {
-      __.errorMsg(req, res, 503, 'Service Unavaiable', error)
+      return Promise.reject(error)
     }
   }
 
   /**
     *_getOneUser() Get One User
-    *@param {object} req
-    *@param {object} res
-    *@return {undefined}
+    *@param {string} id - User _id
+    *@return {Promise<Object>}
     * */
-  async _getOneUser (req, res) {
+  async _getOneUser (id) {
     try {
-      const User = await userQuery.__getUserById(req.params.id)
-      if (!User) { return __.customMsg(req, res, 404, 'User not found') }
-      delete User.password
-      User.deleteStatus = undefined
-      return __.successMsg(req, res, 200, User, 'User Returned Successfully!')
+      const userData = await userQuery.__getUserById(id)
+      if (!userData) { return Promise.resolve({ userData, message: 'User not found', status: 400 }) }
+      delete userData.password
+      userData.deleteStatus = undefined
+      return Promise.resolve({ userData, message: 'User Returned Successfully!', status: 200 })
     } catch (error) {
-      __.errorMsg(req, res, 503, 'Service Unavaiable', error)
+      return Promise.reject(error)
     }
   }
 
   /**
     *_getUser() Get Users
     *@param {Object} req.query - Express req.query
-    *@return {Promise}
+    *@return {Promise<Object>}
     * */
   async _getUsers (query) {
-    return userQuery.__getUsers(query)
+    try {
+      const userData = await userQuery.__getUsers(query)
+      if (!userData.length) { return Promise.resolve({ userData, message: 'Users not found', status: 400 }) }
+      return Promise.resolve({ userData, message: 'Users returned successfully', status: 200 })
+    } catch (error) {
+      return Promise.reject(error)
+    }
   }
 };
 

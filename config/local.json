@@ -8,8 +8,8 @@
     "localDB": {
       "db_host": "127.0.0.1",
       "db_user": "root",
-      "db_password": "myDbPassword",
-      "db_name": "myDb",
+      "db_password": "",
+      "db_name": "boilerPlateDB",
       "db_port": 27017
     }
   }
