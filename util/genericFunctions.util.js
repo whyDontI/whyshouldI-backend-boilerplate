@@ -1,4 +1,4 @@
-async IDGenerator () {
+async function IDGenerator () {
   this.length = 5
   this.timestamp = +new Date()
 
