@@ -2,7 +2,7 @@ const express = require('express')
 const app = express.Router()
 const userService = require('../services/user.service')
 const userValidator = require('../middlewares/validators/user.validator')
-const idValidator = require('../middlewares/validators/id.validator')
+const { isValidId } = require('../middlewares/validators/id.validator')
 const auth = require('../middlewares/auth/auth')
 const __ = require('../util/response.util')
 
@@ -24,7 +24,7 @@ app.get('/', auth.authentication, async (req, res) => {
   }
 })
 
-app.get('/:id', auth.authentication, idValidator.isValidId, async (req, res) => {
+app.get('/:id', auth.authentication, isValidId, async (req, res) => {
   try {
     const { userData, message, status } = await userService._getOneUser(req.params.id)
     return __.successMsg(req, res, status, userData, message)
@@ -42,7 +42,7 @@ app.post('/', auth.authentication, userValidator.createUser, async (req, res) =>
   }
 })
 
-app.patch('/:id', auth.authentication, idValidator.isValidId, userValidator.updateUser, async (req, res) => {
+app.patch('/:id', auth.authentication, isValidId, userValidator.updateUser, async (req, res) => {
   try {
     const { updatedUser, message, status } = await userService._updateUser(req.params.id, req.body)
     return __.successMsg(req, res, status, updatedUser, message)
@@ -51,7 +51,7 @@ app.patch('/:id', auth.authentication, idValidator.isValidId, userValidator.upda
   }
 })
 
-app.delete('/:id', auth.authentication, idValidator.isValidId, async (req, res) => {
+app.delete('/:id', auth.authentication, isValidId, async (req, res) => {
   try {
     const { deletedUser, message, status } = await userService._deleteUser(req.params.id)
     return __.successMsg(req, res, status, deletedUser, message)
