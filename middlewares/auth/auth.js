@@ -5,12 +5,12 @@ const userModelAccess = require('../../dataAdapter/mongo/query/user.query')
 const { encryptorToken } = require('./encryptor')
 const { decryptorToken } = require('./decryptor')
 
-async createToken (userId) {
+async function createToken (userId) {
   userId = userId.toString()
   return jwt.sign({ userId: encryptorToken(userId) }, process.env.SECRET_KEY, { expiresIn: '1d' })
 };
 
-async authentication (req, res, next) {
+async function authentication (req, res, next) {
   try {
     const decoded = await jwt.verify(req.headers.authorization, process.env.SECRET_KEY)
     if (decoded) {
