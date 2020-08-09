@@ -1,3 +1,5 @@
+const shell = require('shelljs')
+
 async function IDGenerator () {
   this.length = 5
   this.timestamp = +new Date()
@@ -18,6 +20,17 @@ async function IDGenerator () {
   return id
 }
 
+function exec (cmd, options) {
+  const defaultOptions = { silent: true }
+  let output = shell.exec(cmd, { ...defaultOptions, ...(options || {}) })
+  if (options && options.toString !== false) {
+    output = output.toString()
+    output = options.trim ? output.trim() : output
+  }
+  return output
+}
+
 module.exports = {
-  IDGenerator
+  IDGenerator,
+  exec
 }
