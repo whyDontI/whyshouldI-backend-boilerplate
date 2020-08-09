@@ -1,5 +1,6 @@
 const cluster = require('cluster')
-const numCPUs = require('os').cpus().length
+// const numCPUs = require('os').cpus().length
+const numCPUs = 1
 const chalk = require('chalk')
 const log = console.log
 class Cluster {
